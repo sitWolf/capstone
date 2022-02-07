@@ -467,7 +467,7 @@ jobs:
       - checkout
       - configure_kubectl
       - run: kubectl get namespaces
-      - run: yum install gettext
+      - run: yum -y install gettext
       - run:
           name: Deploy K8 app
           command: |
