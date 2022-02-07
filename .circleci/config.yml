@@ -466,7 +466,7 @@ jobs:
     steps:
       - checkout
       - configure_kubectl
-      - run: kubectl get svc -n capstone
+      - run: kubectl get namespaces
       - run:
           name: Deploy K8 app
           command: |
@@ -478,17 +478,15 @@ jobs:
     steps:
       - checkout
       - run: aws cloudformation wait stack-create-complete --region ${AWS_DEFAULT_REGION} --stack-name "${STACK_NAME_SERVERLESS}-${CIRCLE_WORKFLOW_ID}"
-      - run: kubectl get svc -n capstone
       - run:
           name: Frontend smoke test
           command: |
-            if curl -s ${URL} | grep "Welcome"
+            if curl -s ${URL} | grep "This application provides a practical"
             then
             echo SUCCESS; exit 0
             else
             echo FAIL; exit 1
             fi
-            # For [SCREENSHOT07].
             # run: exit 1
             - destroy-environment
             - revert-migrations
