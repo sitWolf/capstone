@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/sitWolf/capstone/tree/master.svg?style=svg)](https://circleci.com/gh/sitWolf/capstone/tree/master)
+
 # Capstone Project
 
 ## Project Overview
@@ -5,8 +7,6 @@ This repository provides code for deployment of an image face reconstruction app
 
 ## Application description
 Users can upload a picture they wish to reconstruct. After users upload their picture they are prompted to wait by a loading screen. In the backend, the file is renamed to a random name (randomly generated hex string) and is uploaded to an S3 bucket. The upload to the S3 bucket triggers an AWS Lambda function. The picture then runs through an inference model that attempts to properly reconstruct faces on the image (e.g. sharpen contours). The reconstructed picture is returned to the user. The deployment of the code and resources needed are described in the next sections.
-
----
 
 > **_INFO:_**  Make sure to install Git LFS before cloning this repository. Failing to do so will lead to errors due to missing files. Refer to the requirements section for more information regarding Git LFS.
 

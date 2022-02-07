@@ -472,6 +472,29 @@ jobs:
           command: |
             bash ./django-k8-deployment/deploy-django-k8-app.sh
 
+  smoke-test:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - checkout
+      - run: aws cloudformation wait stack-create-complete --region ${AWS_DEFAULT_REGION} --stack-name "${STACK_NAME_SERVERLESS}-${CIRCLE_WORKFLOW_ID}"
+      - run: kubectl get svc -n capstone
+      - run:
+          name: Frontend smoke test
+          command: |
+            if curl -s ${URL} | grep "Welcome"
+            then
+            echo SUCCESS; exit 0
+            else
+            echo FAIL; exit 1
+            fi
+            # For [SCREENSHOT07].
+            # run: exit 1
+            - destroy-environment
+            - revert-migrations
+            - notify
+
+
   destroy-all-resources:
     docker:
       - image: amazon/aws-cli:latest
@@ -486,51 +509,51 @@ jobs:
 workflows:
   reconstruction:
     jobs:
-      - lint-dockerfiles
-      - local-test:
-          requires: [lint-dockerfiles]
-      - build-production-app:
-          requires: [local-test]
-          context: restoration_env
-      - deploy-infrastructure:
-          context: capstone_env_variables
-          requires: [build-production-app]
-          filters:
-            branches:
-              only: [ master ]
-      - query-infrastructure-outputs:
-          context: capstone_env_variables
-          requires:
-            - deploy-infrastructure
-      - configure-resources:
-          requires:
-            - query-infrastructure-outputs
-          context: capstone_env_variables
-          filters:
-            branches:
-              only: [ master ]
-      - deploy-source-code:
-          requires:
-            - query-infrastructure-outputs
-            - configure-resources
-          filters:
-            branches:
-              only: [ master ]
-          context: capstone_env_variables
-      - get-source-code-key:
-          requires:
-            - deploy-source-code
-          context: capstone_env_variables
-      - deploy-ml-resources:
-          requires:
-            - get-source-code-key
-          context: capstone_env_variables
-          filters:
-            branches:
-              only: [ master ]
+#      - lint-dockerfiles
+#      - local-test:
+#          requires: [lint-dockerfiles]
+#      - build-production-app:
+#          requires: [local-test]
+#          context: restoration_env
+#      - deploy-infrastructure:
+#          context: capstone_env_variables
+#          requires: [build-production-app]
+#          filters:
+#            branches:
+#              only: [ master ]
+#      - query-infrastructure-outputs:
+#          context: capstone_env_variables
+#          requires:
+#            - deploy-infrastructure
+#      - configure-resources:
+#          requires:
+#            - query-infrastructure-outputs
+#          context: capstone_env_variables
+#          filters:
+#            branches:
+#              only: [ master ]
+#      - deploy-source-code:
+#          requires:
+#            - query-infrastructure-outputs
+#            - configure-resources
+#          filters:
+#            branches:
+#              only: [ master ]
+#          context: capstone_env_variables
+#      - get-source-code-key:
+#          requires:
+#            - deploy-source-code
+#          context: capstone_env_variables
+#      - deploy-ml-resources:
+#          requires:
+#            - get-source-code-key
+#          context: capstone_env_variables
+#          filters:
+#            branches:
+#              only: [ master ]
       - deploy-k8-app:
           context: capstone_env_variables
-          requires: [deploy-ml-resources]
+#          requires: [deploy-ml-resources]
           filters:
             branches:
               only: [ master ]

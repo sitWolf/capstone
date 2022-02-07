@@ -1,11 +1,10 @@
 #! /bin/bash
-export NAMESPACE=aa
-export CIRCLE_WORKFLOW_ID=123
-
 # Get variables from .env file
 set -a
 . ./django-k8-deployment/configs/.envs/.env
 set +a
+
+printenv
 
 if [[ "${USE_WORKFLOWID^^}" == "TRUE" ]]
 then
@@ -17,6 +16,8 @@ else
     echo "Incorrect value set for USE_WORKFLOWID. Valid values are true or false."
     exit 0
 fi
+
+find .
 
 # Create a namespace
 echo "=NAMESPACE ====="
@@ -30,10 +31,6 @@ envsubst < configs/configmaps/postgres-config.yaml | kubectl apply -f -
 
 # Create the configmap for traefik (2-step)
 # STEP 1: Include domain name in the yaml snippet
-export DOMAIN=haha.com
-export DOMAIN_EMAIL=info@haha.com
-export WWWDOMAIN=www.haha.com
-
 echo "Variables used:"
 echo "domain: $DOMAIN"
 echo "www domain: www.$DOMAIN"
@@ -52,7 +49,7 @@ envsubst < configs/secrets/postgres.yaml | kubectl apply -f -
 
 echo -e "\n=STORAGECLASS ====="
 # Create storageclass
-# We idendify a single AZ due to having multiple (2) nodes in different availability zones.
+# We identify a single AZ due to having multiple (2) nodes in different availability zones.
 # Without is, it will lead to an affinity conflict. 
 # https://stackoverflow.com/questions/51946393/kubernetes-pod-warning-1-nodes-had-volume-node-affinity-conflict
 export AZONE=${DJANGO_AWS_REGION}${AVAILABILITY_ZONE_SUFFIX}
