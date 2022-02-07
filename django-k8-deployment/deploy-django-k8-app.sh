@@ -17,7 +17,8 @@ else
     exit 0
 fi
 
-find .
+export BUCKET_IN_NAME="$S3_BUCKET_IN_NAME-$CIRCLE_WORKFLOW_ID"
+export BUCKET_OUT_NAME="$S3_BUCKET_OUT_NAME-$CIRCLE_WORKFLOW_ID"
 
 # Create a namespace
 echo "=NAMESPACE ====="

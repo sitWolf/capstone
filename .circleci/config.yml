@@ -62,8 +62,8 @@ commands:
           name: Destroy environments
           command: |
             # Empty the buckets
-            aws s3 rm s3://${S3_BUCKET_SOURCE_NAME} --recursive
-            aws s3 rm s3://${S3_BUCKET_OUT_NAME} --recursive
+            aws s3 rm s3://${S3_BUCKET_SOURCE_NAME}-${CIRCLE_WORKFLOW_ID} --recursive
+            aws s3 rm s3://${S3_BUCKET_OUT_NAME}-${CIRCLE_WORKFLOW_ID} --recursive
             aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name "${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}"
           when: on_fail
   destroy-serverless-resources:
@@ -84,7 +84,7 @@ commands:
           name: Destroy environments
           command: |
             # Empty the buckets
-            aws s3 rm s3://${S3_BUCKET_IN_NAME} --recursive
+            aws s3 rm s3://${S3_BUCKET_IN_NAME}-${CIRCLE_WORKFLOW_ID} --recursive
             aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name ${STACK_NAME_SERVERLESS}
           when: on_fail
   configure_alpine_image_w_aws:
@@ -194,8 +194,8 @@ jobs:
             --parameters \
             ParameterKey=KeyName,ParameterValue=${KEYNAME} \
             ParameterKey=AMItoUse,ParameterValue=${AMI_TO_USE} \
-            ParameterKey=BucketSourceName,ParameterValue=${S3_BUCKET_SOURCE_NAME} \
-            ParameterKey=BucketOutName,ParameterValue=${S3_BUCKET_OUT_NAME}
+            ParameterKey=BucketSourceName,ParameterValue="${S3_BUCKET_SOURCE_NAME}-${CIRCLE_WORKFLOW_ID}" \
+            ParameterKey=BucketOutName,ParameterValue="${S3_BUCKET_OUT_NAME}-${CIRCLE_WORKFLOW_ID}"
       - configure_docker_image
       - run:
           name: Install slack dependencies for notification
@@ -358,7 +358,7 @@ jobs:
 
               aws cloudformation package \
                 --template ~/project/face-restoration-ml/aws_iac/launch_source_code_zip.json \
-                --s3-bucket ${S3_BUCKET_SOURCE_NAME} \
+                --s3-bucket "${S3_BUCKET_SOURCE_NAME}-${CIRCLE_WORKFLOW_ID}" \
                 --use-json
       - persist_to_workspace:
           root: ~/
@@ -381,7 +381,7 @@ jobs:
 
             S3_SOURCE_CODE_KEY=$( \
             aws s3api list-objects-v2 \
-            --bucket ${S3_BUCKET_SOURCE_NAME} \
+            --bucket "${S3_BUCKET_SOURCE_NAME}-${CIRCLE_WORKFLOW_ID}" \
             --query 'sort_by(Contents, &LastModified)[-1].Key' \
             --output=text)
 
@@ -437,9 +437,9 @@ jobs:
                 ParameterKey=SecurityGroupIDs,ParameterValue="$SECURITYGROUPIDS" \
                 ParameterKey=SubnetIDs,ParameterValue="$formatted_subnetids" \
                 ParameterKey=AccessPointARN,ParameterValue=$ACCESSPOINTARN \
-                ParameterKey=S3InputBucketName,ParameterValue=$S3_BUCKET_IN_NAME \
-                ParameterKey=S3OutputBucketName,ParameterValue=$S3_BUCKET_OUT_NAME \
-                ParameterKey=S3SourceCodeBucketName,ParameterValue=$S3_BUCKET_SOURCE_NAME \
+                ParameterKey=S3InputBucketName,ParameterValue="$S3_BUCKET_IN_NAME-${CIRCLE_WORKFLOW_ID}" \
+                ParameterKey=S3OutputBucketName,ParameterValue="$S3_BUCKET_OUT_NAME-${CIRCLE_WORKFLOW_ID}" \
+                ParameterKey=S3SourceCodeBucketName,ParameterValue="$S3_BUCKET_SOURCE_NAME-${CIRCLE_WORKFLOW_ID}" \
                 ParameterKey=S3SourceCodeKey,ParameterValue=$S3_SOURCE_CODE_KEY
               fi
       - destroy-serverless-resources
@@ -512,7 +512,7 @@ workflows:
       - local-test:
           requires: [lint-dockerfiles]
       - build-production-app:
-          requires: [local-test]
+          requires: [local-test]buc
           context: restoration_env
       - deploy-infrastructure:
           context: capstone_env_variables
