@@ -1,0 +1,7 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  namespace: capstone
+  name: traefik-acme
+data:
+  acme.json: ""

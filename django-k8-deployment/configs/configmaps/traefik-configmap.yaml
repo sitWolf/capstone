@@ -1,0 +1,64 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  namespace: $K8_NAMESPACE
+  name: traefik-config
+data:
+  traefik.yml: |-
+    log:
+      level: INFO
+    entryPoints:
+      web:
+        # http
+        address: ":80"
+      web-secure:
+        # https
+        address: ":443"
+    certificatesResolvers:
+      letsencrypt:
+        # https://docs.traefik.io/master/https/acme/#lets-encrypt
+        acme:
+          email: "info@peeklobby.com"
+          storage: /etc/traefik/acme/acme.json
+          # https://docs.traefik.io/master/https/acme/#httpchallenge
+          httpChallenge:
+            entryPoint: web
+    http:
+      routers:
+        web-router:
+          rule: "Host(`peeklobby.com`) || Host(`www.peeklobby.com`)"
+          entryPoints:
+            - web
+          middlewares:
+            - redirect
+            - csrf
+          service: django
+        web-secure-router:
+          rule: "Host(`peeklobby.com`) || Host(`www.peeklobby.com`)"
+          entryPoints:
+            - web-secure
+          middlewares:
+            - csrf
+          service: django
+          tls:
+            # https://docs.traefik.io/master/routing/routers/#certresolver
+            certResolver: letsencrypt
+      middlewares:
+        redirect:
+          # https://docs.traefik.io/master/middlewares/redirectscheme/
+          redirectScheme:
+            scheme: https
+            permanent: true
+        csrf:
+          headers:
+            hostsProxyHeaders: ["X-CSRFToken"]
+      services:
+        django:
+          loadBalancer:
+            servers:
+              - url: http://django:5000
+    providers:
+      # https://docs.traefik.io/master/providers/file/
+      file:
+        filename: /etc/traefik/traefik.yml
+        watch: true

@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create S3 Bucket.
+
+Parameters:
+  BucketInName:
+    Description: Name of the Bucket that will hold the source code of the lambda function
+    Type: String
+    Default: ""
+  BucketOutName:
+    Description: Name of the Bucket that will hold the source code of the lambda function
+    Type: String
+    Default: ""
+
+Resources:
+  S3InBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: Private
+      BucketName: !Ref BucketInName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+  S3OutBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: Private
+      BucketName: !Ref BucketOutName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+
+Outputs:
+  S3InBucketID:
+    Description: S3 In Bucket ID
+    Value: !Ref S3InBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-S3InBucketID"
+  S3OutBucketID:
+    Description: S3 Out Bucket ID
+    Value: !Ref S3InBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-S3OutBucketID"

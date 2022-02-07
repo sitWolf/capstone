@@ -1,0 +1,18 @@
+# Sender mail for alerts (gmail example). Use of app password is recommended
+email: # "john.doe@gmail.com"
+email_app_password: #
+emailer_name:  # "John"
+smarthost:  # "smtp.gmail.com:587"
+receivers_emails: # "darth.vader@gmail.com"
+# AWS IAM credentials. Generate via AWS
+access_key:  # abcAKLAyYfyvkAUHCXS
+secret_key:  # TbUvubuYYwIZ/I/BWP8N2shhGoI0qiil/Q9nn
+# Prometheus port settings [default ports]
+server_port: 9090
+exporter_port: 9100
+alert_port: 9093
+# AWS AMI settings
+username:  # ubuntu
+ami:  # ami-0d382e80be7ffdae5
+region:  # us-west-1
+stack_name:  # prometheusexport

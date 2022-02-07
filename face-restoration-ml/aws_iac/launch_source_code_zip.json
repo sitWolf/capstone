@@ -1,0 +1,15 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Resources": {
+    "MyFunction": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "PackageType": "Zip",
+        "Handler": "index.handler",
+        "Runtime": "nodejs8.10",
+        "CodeUri": "../lambda_app_code"
+      }
+    }
+  }
+}

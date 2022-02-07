@@ -1,0 +1,128 @@
+---
+
+- name: Create a directory to mount EFS into
+  shell: |
+    mkdir -p /home/ec2-user/efs
+    ls /home/ec2-user/efs
+  register: list_efs
+
+- name: Install amazon-efs-utils tools
+  become: true
+  become_method: sudo
+  shell: |
+    yum -y install amazon-efs-utils
+
+- name: Check env variables
+  become: true
+  become_method: sudo
+  shell: |
+    echo "{{ACCESSPOINTID}}"
+    echo "{{FILESYSTEMID}}"
+  register: check_env
+
+- debug:
+    var: check_env.stdout_lines
+
+- name: Mount the EFS file system using the Access Point
+  become: true
+  become_method: sudo
+  shell: |
+    mount -t efs -o tls,accesspoint="{{ACCESSPOINTID}}" "{{FILESYSTEMID}}":/ /home/ec2-user/efs
+
+- name: Create a directory for the models and python libs
+  shell: |
+    mkdir -p /home/ec2-user/efs/pretrained_models
+    mkdir -p /home/ec2-user/efs/lib
+    find /home/ec2-user/efs/
+  register: list_lib
+
+- debug:
+    var: list_lib.stdout_lines
+
+- name: Copy GFPGAN (CPU) Models
+  become: true
+  become_method: sudo
+  copy:
+    checksum: 6075e32c1a235d1711d34ba6ec3ddd6f77668372
+    src: ~/project/face-restoration-ml/app/pretrained_models/cpu.pth
+    dest: /home/ec2-user/efs/pretrained_models/cpu.pth
+
+- name: Copy GFPGAN (GPU) Models
+  become: true
+  become_method: sudo
+  copy:
+    checksum: ddba2db16755c5f032d0f34f092864d2700d759c
+    src: ~/project/face-restoration-ml/app/pretrained_models/gpu.pth
+    dest: /home/ec2-user/efs/pretrained_models/gpu.pth
+
+- name: Show directory and list pre-trained models
+  shell: |
+    find /home/ec2-user/
+  register: list_models
+
+- debug:
+    var: list_models.stdout_lines
+
+- name: Install Python and pip - PART I
+  become: true
+  become_method: sudo
+  shell: |
+    yum -y install python37 ; curl -O https://bootstrap.pypa.io/get-pip.py
+
+- name: Install Python and pip - PART II
+  shell: |
+    python3 get-pip.py --user
+
+- name: Verify the installation
+  shell: |
+    python3 --version
+    pip3 --version
+
+# Must do else installation of bashrc will fail in the next step using target method (-t)
+- name: Normal pip install torch
+  shell: |
+    pip3 install torch --no-cache-dir
+
+- name: Create a requirements.txt file containing the dependencies
+  shell: |
+    echo "basicsr" >> requirements.txt
+    echo "facexlib" >> requirements.txt
+    echo "torch>=1.7" >> requirements.txt
+    echo "numpy<1.21.0" >> requirements.txt
+    echo "opencv-python" >> requirements.txt
+    echo "torchvision" >> requirements.txt
+    echo "scipy" >> requirements.txt
+    echo "tqdm" >> requirements.txt
+    echo "basicsr>=1.3.4.0" >> requirements.txt
+    echo "facexlib>=0.2.0.3" >> requirements.txt
+    echo "lmdb" >> requirements.txt
+    echo "pyyaml" >> requirements.txt
+    echo "tb-nightly" >> requirements.txt
+    echo "yapf" >> requirements.txt
+    echo "realesrgan" >> requirements.txt
+
+- name: Install the Python packages using the requirements file
+  shell: |
+    pip3 install -t efs/lib -r requirements.txt --no-cache-dir
+
+- name: Copy the facexLib weights
+  become: true
+  become_method: sudo
+  copy:
+    checksum: 94e19420c81ae2b05962a1fd3ad7550f9cd08298
+    src: ~/project/face-restoration-ml/app/facexlib_weights/detection_Resnet50_Final.pth
+    dest: /home/ec2-user/efs/lib/facexlib/weights/detection_Resnet50_Final.pth
+
+- name: Show directory and list pre-trained models
+  shell: |
+    pwd
+    find /home/ec2-user/
+  register: final_list
+
+- debug:
+    var: final_list.stdout_lines
+
+- name: Export EFS path as PYTHONPATH, persist and execute it (source).
+  shell: |
+    echo export PYTHONPATH=/home/ec2-user/efs/lib >> ~/.bashrc
+    source ~/.bashrc

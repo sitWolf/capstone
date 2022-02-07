@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: django
+  namespace: stonecap
+  name: django
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+      - args:
+        - /start
+        image: sitwolf/django_k8:4.0
+        name: django
+        ports:
+          - name: gunicorn
+            containerPort: 5000
+        envFrom:
+          - configMapRef:
+              name: envs-production-django
+          - configMapRef:
+              name: envs-production-postgres
+          - secretRef:
+              name: secrets-production-django
+          - secretRef:
+              name: secrets-production-postgres
+        env:
+          - name: DATABASE_URL
+            value: postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
+        resources: {}
+        # livenessProbe:
+        #   httpGet:
+        #     path: /healthy
+        #     port: gunicorn
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 30
+        #   timeoutSeconds: 2
+        #   failureThreshold: 2
+        # readinessProbe:
+        #   httpGet:
+        #     path: /readiness
+        #     port: gunicorn
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 30
+        #   timeoutSeconds: 5
+        #   failureThreshold: 2
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: capstone
+  name: django
+  labels:
+    app: django
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+    name: http
+  selector:
+    app: django

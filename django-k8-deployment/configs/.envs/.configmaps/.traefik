@@ -1,0 +1,171 @@
+log:
+  level: INFO
+entryPoints:
+  web:
+    # http
+    address: ":80"
+  web-secure:
+    # https
+    address: ":443"
+certificatesResolvers:
+  letsencrypt:
+    # https://docs.traefik.io/master/https/acme/#lets-encrypt
+    acme:
+      email: ${domain_email}
+      storage: /etc/traefik/acme/acme.json
+      # https://docs.traefik.io/master/https/acme/#httpchallenge
+      httpChallenge:
+        entryPoint: web
+http:
+  routers:
+    web-router:
+      rule: "Host(`${domain}`) || Host(`${wwwdomain}`)"
+      entryPoints:
+        - web
+      middlewares:
+        - redirect
+        - csrf
+      service: django
+    web-secure-router:
+      rule: "Host(`${domain}`) || Host(`${wwwdomain}`)"
+      entryPoints:
+        - web-secure
+      middlewares:
+        - csrf
+      service: django
+      tls:
+        # https://docs.traefik.io/master/routing/routers/#certresolver
+        certResolver: letsencrypt
+  middlewares:
+    redirect:
+      # https://docs.traefik.io/master/middlewares/redirectscheme/
+      redirectScheme:
+        scheme: https
+        permanent: true
+    csrf:
+      headers:
+        hostsProxyHeaders: ["X-CSRFToken"]
+  services:
+    django:
+      loadBalancer:
+        servers:
+          - url: http://django:5000
+providers:
+  # https://docs.traefik.io/master/providers/file/
+  file:
+    filename: /etc/traefik/traefik.yml
+    watch: true
+log:
+  level: INFO
+entryPoints:
+  web:
+    # http
+    address: ":80"
+  web-secure:
+    # https
+    address: ":443"
+certificatesResolvers:
+  letsencrypt:
+    # https://docs.traefik.io/master/https/acme/#lets-encrypt
+    acme:
+      email: 
+      storage: /etc/traefik/acme/acme.json
+      # https://docs.traefik.io/master/https/acme/#httpchallenge
+      httpChallenge:
+        entryPoint: web
+http:
+  routers:
+    web-router:
+      rule: "Host(``) || Host(``)"
+      entryPoints:
+        - web
+      middlewares:
+        - redirect
+        - csrf
+      service: django
+    web-secure-router:
+      rule: "Host(``) || Host(``)"
+      entryPoints:
+        - web-secure
+      middlewares:
+        - csrf
+      service: django
+      tls:
+        # https://docs.traefik.io/master/routing/routers/#certresolver
+        certResolver: letsencrypt
+  middlewares:
+    redirect:
+      # https://docs.traefik.io/master/middlewares/redirectscheme/
+      redirectScheme:
+        scheme: https
+        permanent: true
+    csrf:
+      headers:
+        hostsProxyHeaders: ["X-CSRFToken"]
+  services:
+    django:
+      loadBalancer:
+        servers:
+          - url: http://django:5000
+providers:
+  # https://docs.traefik.io/master/providers/file/
+  file:
+    filename: /etc/traefik/traefik.yml
+    watch: true
+log:
+  level: INFO
+entryPoints:
+  web:
+    # http
+    address: ":80"
+  web-secure:
+    # https
+    address: ":443"
+certificatesResolvers:
+  letsencrypt:
+    # https://docs.traefik.io/master/https/acme/#lets-encrypt
+    acme:
+      email: 
+      storage: /etc/traefik/acme/acme.json
+      # https://docs.traefik.io/master/https/acme/#httpchallenge
+      httpChallenge:
+        entryPoint: web
+http:
+  routers:
+    web-router:
+      rule: "Host(``) || Host(``)"
+      entryPoints:
+        - web
+      middlewares:
+        - redirect
+        - csrf
+      service: django
+    web-secure-router:
+      rule: "Host(``) || Host(``)"
+      entryPoints:
+        - web-secure
+      middlewares:
+        - csrf
+      service: django
+      tls:
+        # https://docs.traefik.io/master/routing/routers/#certresolver
+        certResolver: letsencrypt
+  middlewares:
+    redirect:
+      # https://docs.traefik.io/master/middlewares/redirectscheme/
+      redirectScheme:
+        scheme: https
+        permanent: true
+    csrf:
+      headers:
+        hostsProxyHeaders: ["X-CSRFToken"]
+  services:
+    django:
+      loadBalancer:
+        servers:
+          - url: http://django:5000
+providers:
+  # https://docs.traefik.io/master/providers/file/
+  file:
+    filename: /etc/traefik/traefik.yml
+    watch: true

@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Serverless Lambda function for GFPGAN
+
+Parameters:
+  SecurityGroupIDs:
+    Type: CommaDelimitedList
+  SubnetIDs:
+    Type: CommaDelimitedList
+    Description: The list of SubnetIDs in the Virtual Private Cloud (VPC)
+  EFSpath:
+    Type: String
+    Default: /mnt/efs
+  S3InputBucketName:
+    Type: String
+  S3OutputBucketName:
+    Type: String
+  S3SourceCodeBucketName:
+    Type: String
+  S3SourceCodeKey:
+    Type: String
+    Default: S3SourceCodeKey
+  AccessPointARN:
+    Type: String
+    Description: Access point ARN
+
+Resources:
+  # S3 Buckets
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
+  S3InputBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      AccessControl: Private
+      BucketName: !Ref S3InputBucketName
+#    DeletionPolicy: Retain
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+
+  ReconstructionFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-codeuri
+    Properties:
+      Handler: app.lambda_handler
+      # CodeUri: "s3://bucket/code"
+      CodeUri:
+        Bucket: !Ref S3SourceCodeBucketName
+        Key: !Ref S3SourceCodeKey
+      Runtime: python3.7
+      Timeout: 900
+      MemorySize: 3008
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIDs
+        SubnetIds: !Ref SubnetIDs
+      # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-property-function-s3.html
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref S3InputBucket
+            Events:
+              - s3:ObjectCreated:*
+      FileSystemConfigs:
+      - Arn: !Ref AccessPointARN
+        LocalMountPath: !Ref EFSpath
+      Policies:
+      - Statement:
+        - Sid: AWSLambdaVPCAccessExecutionRole
+          Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientRootAccess
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        - Sid: LambdaFullS3Access
+          Effect: Allow
+          Action: "*"
+          Resource: "*"
+#        - Sid: ResourceSpecificLambdaGetS3Access
+#          Effect: Allow
+#          Action:
+#            - s3-object-lambda:*
+#            - s3:Get
+#          Resource: "*"
+#        - Sid: ResourceSpecificLambdaPutS3Access
+#          Effect: Allow
+#          Action:
+#            - s3-object-lambda:*
+#            - s3:Put
+#          Resource: "*"
+      Environment:
+        Variables:
+          EFSPATH: /mnt/efs
+          MODEL_FILE_PATH: /mnt/efs/pretrained_models
+          PYTHON_LIB_FILE_PATH: /mnt/efs/lib
+          AWS_S3_IN_BUCKET_NAME: !Ref S3InputBucketName
+          AWS_S3_OUT_BUCKET_NAME: !Ref S3OutputBucketName

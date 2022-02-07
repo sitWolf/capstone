@@ -1,0 +1,146 @@
+{% load static i18n %}<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+
+<html lang="{{ LANGUAGE_CODE }}">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>{% block title %}Face restoration web app{% endblock title %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Face restoration machine learning model deployed as a web app">
+    <meta name="author" content="Masud Petronia">
+
+    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}">
+
+    {% block css %}
+    <!-- Latest compiled and minified Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" integrity="sha512-GQGU0fMMi238uA+a/bdWJfpUGKUkBdgfFdgBm72SUQ6BeyWjoY/ton0tEjH+OSH9iP4Dfh+7HM0I9f5eR0L/4w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Your stuff: Third-party CSS libraries go here -->
+    <!-- This file stores project-specific CSS -->
+    <link href="{% static 'css/project.css' %}" rel="stylesheet">
+    {% endblock %}
+    <!-- Le javascript
+    ================================================== -->
+    {# Placed at the top of the document so pages load faster with defer #}
+
+    {% block javascript %}
+      <!-- Bootstrap JS -->
+      <script defer src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.min.js" integrity="sha512-OvBgP9A2JBgiRad/mM36mkzXSXaJE9BEIENnVEmeZdITvwT09xnxLtT4twkCa8m/loMbPHsvPl0T8lRGVBwjlQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <!-- Your stuff: Third-party javascript libraries go here -->
+
+      <!-- place project specific Javascript in this file -->
+      <script defer src="{% static 'js/project.js' %}"></script>
+      <script class="jsbin" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+
+    {% endblock javascript %}
+
+  </head>
+  <body>
+    <div class="mb-1">
+      <nav class="navbar navbar-expand-md navbar-light">
+        <div class="container-fluid">
+          <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item active">
+                <a class="nav-link" href="{% url 'restoration:home' %}">
+
+                  <svg version="1.1" id="Capa_1" fill="#464242" width="40" height="30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 330.242 330.242" style="enable-background:new 0 0 330.242 330.242;" xml:space="preserve">
+<path d="M324.442,129.811l-41.321-33.677V42.275c0-6.065-4.935-11-11-11h-26c-6.065,0-11,4.935-11,11v14.737l-55.213-44.999  c-3.994-3.254-9.258-5.047-14.822-5.047c-5.542,0-10.781,1.782-14.753,5.019L5.8,129.81c-6.567,5.351-6.173,10.012-5.354,12.314  c0.817,2.297,3.448,6.151,11.884,6.151h19.791v154.947c0,11.058,8.972,20.053,20,20.053h62.5c10.935,0,19.5-8.809,19.5-20.053  v-63.541c0-5.446,5.005-10.405,10.5-10.405h42c5.238,0,9.5,4.668,9.5,10.405v63.541c0,10.87,9.388,20.053,20.5,20.053h61.5  c11.028,0,20-8.996,20-20.053V148.275h19.791c8.436,0,11.066-3.854,11.884-6.151C330.615,139.822,331.009,135.161,324.442,129.811z"/>
+</svg>
+                  <span class="visually-hidden">(current)</span></a>
+              </li>
+
+            </ul>
+
+          <div class="navbar-collapse collapse w-100 order-3 order-md-0 dual-collapse2">
+
+            <ul class="navbar-nav ms-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'about' %}">
+
+             <svg version="1.1" id="Capa_2" fill="#464242" width="30" height="60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 494.572 494.572" style="enable-background:new 0 0 494.572 494.572;" xml:space="preserve">
+<path id="XMLID_140_" d="M257.063,0C127.136,0,21.808,105.33,21.808,235.266c0,41.012,10.535,79.541,28.973,113.104L3.825,464.586  c-3.285,8.118-1.391,17.402,4.799,23.593c6.176,6.19,15.47,8.085,23.586,4.802l118.707-47.953  c31.933,16.186,67.912,25.504,106.146,25.504c129.945,0,235.275-105.33,235.275-235.266S387.009,0,257.063,0z M256.804,94.852  c22.865,0,41.403,18.538,41.403,41.404s-18.538,41.403-41.403,41.403c-22.865,0-41.406-18.537-41.406-41.403  S233.938,94.852,256.804,94.852z M298.616,356.496c0,10.6-8.592,19.191-19.191,19.191h-45.243c-10.6,0-19.19-8.591-19.19-19.191  V198.312c11.939,8.077,26.345,12.797,41.813,12.797c15.467,0,29.872-4.721,41.813-12.797V356.496z"/>
+</svg>
+
+                </a>
+              </li>
+              {% if request.user.is_authenticated %}
+                <li class="nav-item">
+                  {# URL provided by django-allauth/account/urls.py #}
+                  <a class="nav-link" href="{% url 'users:detail' request.user.username  %}">{% translate "My Profile" %}</a>
+                </li>
+                <li class="nav-item">
+                  {# URL provided by django-allauth/account/urls.py #}
+                  <a class="nav-link" href="{% url 'account_logout' %}">{% translate "Sign Out" %}</a>
+                </li>
+              {% else %}
+                <li class="nav-item">
+                  {# URL provided by django-allauth/account/urls.py #}
+                  <a id="log-in-link" class="nav-link" href="{% url 'account_login' %}">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="105" fill="#464242" height="60" id="Capa_1" x="0px" y="0px" viewBox="0 0 273.5 273.5" style="enable-background:new 0 0 150 150;" xml:space="preserve">
+<path d="M99.433,128.202v17.096c0,2.297-1.869,4.167-4.167,4.167h-5.253c-2.297,0-4.167-1.869-4.167-4.167v-17.096  c0-2.297,1.869-4.167,4.167-4.167h5.253C97.564,124.036,99.433,125.905,99.433,128.202z M273.5,109.125v55.25  c0,11.786-9.589,21.375-21.375,21.375H21.375C9.589,185.75,0,176.161,0,164.375v-55.25C0,97.339,9.589,87.75,21.375,87.75h230.75  C263.911,87.75,273.5,97.339,273.5,109.125z M68.161,156.965c0-4.142-3.358-7.5-7.5-7.5H42.433v-32.929c0-4.142-3.358-7.5-7.5-7.5  s-7.5,3.358-7.5,7.5v40.429c0,4.142,3.358,7.5,7.5,7.5h25.728C64.803,164.465,68.161,161.107,68.161,156.965z M114.433,128.202  c0-10.568-8.598-19.167-19.167-19.167h-5.253c-10.568,0-19.167,8.598-19.167,19.167v17.096c0,10.568,8.598,19.167,19.167,19.167  h5.253c10.569,0,19.167-8.598,19.167-19.167V128.202z M165.447,145.298c0-4.142-3.358-7.5-7.5-7.5h-6.822  c-4.142,0-7.5,3.358-7.5,7.5c0,1.542,0.465,2.975,1.263,4.167h-3.86c-2.297,0-4.167-1.869-4.167-4.167v-17.096  c0-2.297,1.869-4.167,4.167-4.167h5.253c1.303,0,2.217,0.565,2.754,1.04c3.106,2.742,7.845,2.446,10.586-0.659  c2.741-3.105,2.446-7.845-0.659-10.586c-3.502-3.092-8.006-4.794-12.681-4.794h-5.253c-10.568,0-19.167,8.598-19.167,19.167v17.096  c0,10.568,8.598,19.167,19.167,19.167h5.253C156.849,164.465,165.447,155.867,165.447,145.298z M187.68,116.536  c0-4.142-3.358-7.5-7.5-7.5s-7.5,3.358-7.5,7.5v40.429c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5V116.536z M243.43,116.536  c0-4.142-3.358-7.5-7.5-7.5s-7.5,3.358-7.5,7.5v18.6l-18.084-23.209c-1.968-2.527-5.323-3.525-8.353-2.483  c-3.029,1.041-5.063,3.89-5.063,7.093v40.429c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5v-18.6l18.084,23.209  c1.449,1.86,3.649,2.891,5.917,2.891c0.813,0,1.636-0.133,2.436-0.407c3.029-1.041,5.063-3.891,5.063-7.093V116.536z"/>
+</svg></a>
+                </li>
+              {% endif %}
+
+
+            </ul>
+          </div>
+
+
+
+          </div>
+        </div>
+      </nav>
+
+    </div>
+
+    <div class="container">
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-dismissible {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% block content %}
+
+      {% endblock content %}
+
+
+
+    </div> <!-- /container -->
+
+    {% block modal %}{% endblock modal %}
+
+    {% block inline_javascript %}
+    {% comment %}
+    Script tags with only code, no src (defer by default). To run
+    with a "defer" so that you run run inline code:
+
+
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {/* Run whatever you want */});
+    </script>
+<!--    <script>-->
+<!--    var loadFile = function(event) {-->
+<!--    var output = document.getElementById('output');-->
+<!--    output.src = URL.createObjectURL(event.target.files[0]);-->
+<!--    output.onload = function() {-->
+<!--      URL.revokeObjectURL(output.src) // free memory-->
+<!--    }-->
+<!--  };-->
+<!--  </script>-->
+<!--    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>-->
+    {% endcomment %}
+    {% endblock inline_javascript %}
+  </body>
+</html>

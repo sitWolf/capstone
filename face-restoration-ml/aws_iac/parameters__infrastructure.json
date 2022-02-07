@@ -1,0 +1,23 @@
+[
+    {
+        "ParameterKey": "EnvironmentName",
+        "ParameterValue": "Capstone_EFS_EC2"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "proto-ninja"
+    },
+    {
+        "ParameterKey": "VPCCIDR",
+        "ParameterValue": "10.0.0.0/16"
+    },
+    {
+        "ParameterKey": "AMItoUse",
+        "ParameterValue": "ami-0fdbd8587b1cf431e"
+    },
+    {
+        "ParameterKey": "S3SourceCodeBucketName",
+        "ParameterValue": "reconstructionsourcebucket"
+    }
+]
+

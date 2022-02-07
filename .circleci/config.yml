@@ -1,0 +1,537 @@
+version: 2.1
+# Note to developer:
+# Dependencies can be best figured out by using running the respective containers in docker on your local machine.
+
+# START ORBS
+orbs:
+  slack: circleci/slack@4.4.2
+# END ORBS
+
+# START COMMANDS ===========
+commands:
+  configure_docker_image:
+    steps:
+      - run:
+          name: Configure the docker image
+          command: |
+            yum install -y tar && \
+            yum install -y sudo && \
+            ls -al /bin/sh && \
+            sudo rm /bin/sh && \
+            sudo ln -s /bin/bash /bin/sh && \
+            ls -al /bin/sh
+  configure_kubectl:
+    steps:
+      # Install kubectl
+      # https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+      - run:
+          name: Install Kubectl
+          # https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+          command: |
+            yum update \
+            && curl -LO "https://dl.k8s.io/release/v1.21.2/bin/linux/amd64/kubectl" \
+            && curl -LO "https://dl.k8s.io/v1.21.2/bin/linux/amd64/kubectl.sha256" \
+            && echo "$(<kubectl.sha256)  kubectl" | sha256sum --check \
+            && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+      # Configure kubectl for the AWS EKS cluster
+      # https://aws.amazon.com/premiumsupport/knowledge-center/eks-cluster-connection/
+      - run:
+          name: Configure Kubectl for EKS cluster
+          command: |
+            yum install -y jq
+            awsAccountId=$(aws sts get-caller-identity | jq -r '.Account')
+            echo $awsAccountId
+            echo $AWS_DEFAULT_REGION
+            echo $EKS_CLUSTER_NAME
+            aws eks --region ${AWS_DEFAULT_REGION} update-kubeconfig --name ${EKS_CLUSTER_NAME}
+  destroy-infrastructure:
+    description: Destroy cloudformation stacks given a workflow ID.
+    steps:
+      - run:
+          name: Install awscli
+          command: |
+            VERSION=$(aws --version 2> /dev/null) || VERSION=$(echo FALSE)
+            if echo ${VERSION} | grep "aws-cli"
+            then
+            echo "${VERSION}"
+            else
+            pip install awscli
+            fi
+          when: on_fail
+      - run:
+          name: Destroy environments
+          command: |
+            # Empty the buckets
+            aws s3 rm s3://${S3_BUCKET_SOURCE_NAME} --recursive
+            aws s3 rm s3://${S3_BUCKET_OUT_NAME} --recursive
+            aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name ${STACK_NAME_INFRASTRUCTURE}
+          when: on_fail
+  destroy-serverless-resources:
+    description: Destroy cloudformation of the serverless resources stack.
+    steps:
+      - run:
+          name: Install awscli
+          command: |
+            VERSION=$(aws --version 2> /dev/null) || VERSION=$(echo FALSE)
+            if echo ${VERSION} | grep "aws-cli"
+            then
+            echo "${VERSION}"
+            else
+            pip install awscli
+            fi
+          when: on_fail
+      - run:
+          name: Destroy environments
+          command: |
+            # Empty the buckets
+            aws s3 rm s3://${S3_BUCKET_IN_NAME} --recursive
+            aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name ${STACK_NAME_SERVERLESS}
+          when: on_fail
+  configure_alpine_image_w_aws:
+    steps:
+      - run:
+          name: Configure the docker image
+          command: |
+            apk update && apk add --no-cache curl zip &&  \
+            curl -s https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.2.43.zip -o awscliv2.zip && \
+            unzip awscliv2.zip && ./aws/install
+            aws --version
+#      - notify
+
+# END COMMANDS ===========
+
+# START JOBS ===========
+jobs:
+  lint-dockerfiles:
+    docker:
+      # https://circleci.com/blog/announcing-our-next-generation-convenience-images-smaller-faster-more-deterministic/
+      - image: cimg/base:2020.01
+    steps:
+      - checkout
+      - run:
+          name: Install Hadolint
+          # https://github.com/hadolint/hadolint
+          command: |
+            sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.8.0/hadolint-Linux-x86_64 && \
+            sudo chmod +x /bin/hadolint
+      - run:
+          name: Lint dockerfiles
+          command: |
+            hadolint django-k8-app/compose/local/django/Dockerfile --ignore DL3013 --ignore DL3008 --ignore DL3045 --ignore DL3059
+            hadolint django-k8-app/compose/local/docs/Dockerfile --ignore DL3013 --ignore DL3008 --ignore DL3042 --ignore DL3059
+            hadolint django-k8-app/compose/production/aws/Dockerfile
+            hadolint django-k8-app/compose/production/django/Dockerfile --ignore DL3008 --ignore DL3045 --ignore DL3059
+            hadolint django-k8-app/compose/production/postgres/Dockerfile
+            hadolint django-k8-app/compose/production/traefik/Dockerfile
+
+  local-test:
+    # Without caching, this job takes approx 5min to complete.
+    docker:
+      - image: cimg/base:2020.01
+    steps:
+      - checkout
+      - setup_remote_docker:
+          # https://github.com/docker-library/postgres/issues/884
+          version: 20.10.6
+          # https://circleci.com/docs/2.0/docker-layer-caching/
+          docker_layer_caching: true
+      - run:
+          name: Set up Python
+          command: |
+            sudo apt-get update
+      - run:
+          name: Build the Stack
+          command: |
+            docker-compose -f django-k8-app/local.yml build
+      - run:
+          name: Run DB Migrations
+          command: |
+            docker-compose -f django-k8-app/local.yml run --rm django python manage.py migrate
+      - run:
+          name: Run Django Tests
+          command: |
+            docker-compose -f django-k8-app/local.yml run django pytest
+      - run:
+          name: Tear down the Stack
+          command: |
+            docker-compose -f django-k8-app/local.yml down
+
+  build-production-app:
+    # Without caching, this job takes approx 5min to complete.
+    docker:
+      - image: cimg/base:2020.01
+    steps:
+      - checkout
+      - setup_remote_docker:
+          # https://github.com/docker-library/postgres/issues/884
+          version: 20.10.6
+          # https://circleci.com/docs/2.0/docker-layer-caching/
+          docker_layer_caching: true
+      - run:
+          name: Set up Python
+          command: |
+            sudo apt-get update
+      - run:
+          name: Build the Stack
+          command: |
+            echo ${DOCKER_HUB_PW} | docker login -u ${DOCKER_HUB_UNAME} --password-stdin && \
+            docker-compose -f django-k8-app/production.yml build
+            docker-compose -f django-k8-app/production.yml push
+
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - checkout
+      - run:
+          name: Deploy infrastructure
+          command: |
+            set TERM=xterm
+            aws cloudformation create-stack \
+            --region ${AWS_DEFAULT_REGION} \
+            --stack-name ${STACK_NAME_INFRASTRUCTURE} \
+            --template-body file://face-restoration-ml/aws_iac/create__infrastructure.yml \
+            --parameters \
+            ParameterKey=KeyName,ParameterValue=${KEYNAME} \
+            ParameterKey=AMItoUse,ParameterValue=${AMI_TO_USE} \
+            ParameterKey=BucketSourceName,ParameterValue=${S3_BUCKET_SOURCE_NAME} \
+            ParameterKey=BucketOutName,ParameterValue=${S3_BUCKET_OUT_NAME}
+      - configure_docker_image
+      - run:
+          name: Install slack dependencies for notification
+          command: |
+            yum install -y jq
+      - destroy-infrastructure
+
+  query-infrastructure-outputs:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - run:
+          name: Install git lfs
+          command: |
+            yum install -y git
+            curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.rpm.sh | bash
+            yum install -y git-lfs
+            git lfs install
+      - checkout
+#      - run:
+#          name: Check model sha1
+#          command: |
+#            sha1sum ~/project/face-restoration-ml/app/pretrained_models/cpu.pth
+      - run: aws cloudformation wait stack-create-complete --region ${AWS_DEFAULT_REGION} --stack-name ${STACK_NAME_INFRASTRUCTURE}
+      - run:
+          name: Get Access Point ARN
+          command: |
+            echo "export ACCESSPOINTARN=$( \
+            aws cloudformation describe-stacks \
+            --region eu-west-2 \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='AccessPointARN'].OutputValue" \
+            --output text)" >> ~/project/.circleci/ansible/env_vars
+      - run:
+          name: Get Security Group IDs
+          command: |
+            echo "export SECURITYGROUPIDS=$( \
+            aws cloudformation describe-stacks \
+            --region eu-west-2 \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='DefaultSecurityGroup'].OutputValue" \
+            --output text)" >> ~/project/.circleci/ansible/env_vars
+      - run:
+          name: Get Subnet IDs
+          command: |
+            echo "export SUBNETIDS=$( \
+            aws cloudformation describe-stacks \
+            --region eu-west-2 \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='SubnetIds'].OutputValue" \
+            --output text)" >> ~/project/.circleci/ansible/env_vars
+      - run:
+          name: Get EFS Accesspoint ID
+          command: |
+              echo "export EFSACCESSPOINTID=$( \
+              aws cloudformation describe-stacks \
+              --region eu-west-2 \
+              --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='AccessPointID'].OutputValue" \
+              --output text)" >> ~/project/.circleci/ansible/env_vars
+      - run:
+          name: Get EFS File System ID
+          command: |
+              echo "export EFSFILESYSTEMID=$( \
+              aws cloudformation describe-stacks \
+              --region eu-west-2 \
+              --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='FileSystemID'].OutputValue" \
+              --output text)" >> ~/project/.circleci/ansible/env_vars
+      - run:
+          name: Get EC2 Public DNS name
+          command: |
+            echo "$( \
+            aws cloudformation describe-stacks \
+            --region eu-west-2 \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='EC2IP'].OutputValue" \
+            --output text)" >> ~/project/.circleci/ansible/inventory.ini
+      - run: cat ~/project/.circleci/ansible/inventory.ini
+      - run: cat ~/project/.circleci/ansible/env_vars
+      # Configure in order to persist workspace (tar)
+      - configure_docker_image
+      # - run: ls -la ~ # returns . .. .ssh project
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci
+            - project/face-restoration-ml/app/pretrained_models/cpu.pth
+            - project/face-restoration-ml/app/pretrained_models/gpu.pth
+            - project/face-restoration-ml/app/facexlib_weights/detection_Resnet50_Final.pth
+            - project/face-restoration-ml/aws_iac
+            - project/face-restoration-ml/lambda_app_code
+            - project/django-k8-deployment
+      - destroy-infrastructure
+
+
+  configure-resources:
+    docker:
+      - image: python:3.7-alpine3.15
+    environment:
+      # https://docs.ansible.com/ansible/latest/reference_appendices/config.html
+      # https://github.com/radekg/terraform-provisioner-ansible/issues/98
+      ANSIBLE_HOST_KEY_CHECKING: False
+      # https://circleci.com/docs/2.0/env-vars/#using-parameters-and-bash-environment
+      # BASH_ENV: /etc/profile # Part 1/2 Allows using $BASH_ENV. See link below
+      # shell: /bin/sh -leo pipefail # Part 1/2 Allows using $BASH_ENV
+    steps:
+      - run: apk update && apk add --no-cache git && apk add --no-cache openssh
+      - run: ls -la ~
+      - attach_workspace:
+          at: ~/
+      - run: find .
+      - run: ls -la ~/project/
+      - run: cat ~/project/.circleci/ansible/inventory.ini
+      - run: cat ~/project/.circleci/ansible/env_vars
+      - add_ssh_keys:
+          # Open the key pair proto-ninja.pem file in any text editor on your local machine and copy the content.
+          # Go to CircleCI Projects, from the respective repo select Project Settings (...)--> SSH Keys > Additional SSH Keys, and paste the paste the SSH key
+          fingerprints:
+            - ${FINGERPRINT}
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+            apk add --no-cache python3 py3-pip \
+            && pip3 install --upgrade pip \
+            && pip3 install awscli \
+            && rm -rf /var/cache/apk/*
+            apk add --update curl jq
+            ansible-galaxy install weareinteractive.environment
+      - run: ls -la
+      - run: ls -la ~/project/.circleci/ansible/
+
+      - run:
+          name: Export env variables then run Ansible playbook
+          # Extra vars convention
+          # https://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html
+          command: |
+            cat ~/project/.circleci/ansible/env_vars >> $BASH_ENV
+            source $BASH_ENV
+            echo "ENV VARIABLE (CHECK IF VALUE PRESENT): $EFSFILESYSTEMID"
+
+            ansible-playbook \
+            ~/project/.circleci/ansible/configure-server.yml \
+            -i ~/project/.circleci/ansible/inventory.ini \
+            -e "ACCESSPOINTID=$EFSACCESSPOINTID FILESYSTEMID=$EFSFILESYSTEMID"
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - "*"
+      - destroy-infrastructure
+
+  deploy-source-code:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - configure_docker_image
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Upload script sourcecode to S3 bucket
+          command: |
+              cat ~/project/.circleci/ansible/env_vars >> $BASH_ENV
+              source $BASH_ENV
+              echo "ENV VARIABLE (CHECK IF VALUE PRESENT): $EFSFILESYSTEMID"
+
+              aws cloudformation package \
+                --template ~/project/face-restoration-ml/aws_iac/launch_source_code_zip.json \
+                --s3-bucket ${S3_BUCKET_SOURCE_NAME} \
+                --use-json
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - '*'
+
+  get-source-code-key:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - configure_docker_image
+      - attach_workspace:
+          at: ~/
+      - run: find .
+      - run:
+          name: Get name of uploaded file
+          command: |
+            cat ~/project/.circleci/ansible/env_vars >> $BASH_ENV
+            source $BASH_ENV
+
+            S3_SOURCE_CODE_KEY=$( \
+            aws s3api list-objects-v2 \
+            --bucket ${S3_BUCKET_SOURCE_NAME} \
+            --query 'sort_by(Contents, &LastModified)[-1].Key' \
+            --output=text)
+
+            # CHECK IF VALUE PRESENT
+            if [ -z "${S3_SOURCE_CODE_KEY}" ]
+            then
+              exit 1
+            fi
+            echo "export S3_SOURCE_CODE_KEY=${S3_SOURCE_CODE_KEY}" >> ~/project/.circleci/ansible/env_vars
+            cat ~/project/.circleci/ansible/env_vars
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - '*'
+
+  deploy-ml-resources:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - checkout
+      - configure_docker_image
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Deploy Lambda with S3 event triggered bucket
+          command: |
+              cat ~/project/.circleci/ansible/env_vars
+              cat ~/project/.circleci/ansible/env_vars >> $BASH_ENV
+              source $BASH_ENV
+              echo "${S3_SOURCE_CODE_KEY}"
+
+              # Format list separator. Else raises error: Invalid type for parameter Parameters[1].ParameterValue, value
+
+              # ${data means "expand based on the value found in variable data";
+              # // means "search all occurences of";
+              # The single / means "replace with what follows".
+
+              echo "${SUBNETIDS}"
+              subnetids="${SUBNETIDS}"
+              formatted_subnetids=${subnetids//,/"\,"}
+
+              # CHECK IF VALUE PRESENT
+              if [ -z "${S3_SOURCE_CODE_KEY}" ]
+              then
+                exit 1
+              else
+                aws cloudformation create-stack \
+                --region ${AWS_DEFAULT_REGION} \
+                --stack-name ${STACK_NAME_SERVERLESS} \
+                --template-body file://face-restoration-ml/aws_iac/create__lambda.yml \
+                --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+                --parameters \
+                ParameterKey=SecurityGroupIDs,ParameterValue="$SECURITYGROUPIDS" \
+                ParameterKey=SubnetIDs,ParameterValue="$formatted_subnetids" \
+                ParameterKey=AccessPointARN,ParameterValue=$ACCESSPOINTARN \
+                ParameterKey=S3InputBucketName,ParameterValue=$S3_BUCKET_IN_NAME \
+                ParameterKey=S3OutputBucketName,ParameterValue=$S3_BUCKET_OUT_NAME \
+                ParameterKey=S3SourceCodeBucketName,ParameterValue=$S3_BUCKET_SOURCE_NAME \
+                ParameterKey=S3SourceCodeKey,ParameterValue=$S3_SOURCE_CODE_KEY
+              fi
+      - destroy-serverless-resources
+      - persist_to_workspace:
+          root: .
+          paths:
+            - '*'
+
+  check-variable-names:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - checkout
+      # https://circleci.com/docs/2.0/env-vars/
+      - run: echo ${CIRCLE_JOB}
+      - run: echo ${CIRCLE_BUILD_NUM}
+      - run: echo ${CIRCLE_SHA1}
+      - run: echo ${CIRCLE_TAG}
+      - run: echo ${CIRCLE_WORKFLOW_WORKSPACE_ID}
+
+  deploy-k8-app:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - checkout
+      - configure_kubectl
+      - run: kubectl get svc -n capstone
+      - run:
+          name: Deploy K8 app
+          command: |
+            bash ./django-k8-deployment/deploy-django-k8-app.sh
+
+  destroy-all-resources:
+    docker:
+      - image: amazon/aws-cli:latest
+    steps:
+      - checkout
+      - destroy-serverless-resources
+      - destroy-infrastructure
+
+
+# END JOBS ===========
+
+workflows:
+  reconstruction:
+    jobs:
+      - lint-dockerfiles
+      - local-test:
+          requires: [lint-dockerfiles]
+      - build-production-app:
+          requires: [local-test]
+          context: restoration_env
+      - deploy-infrastructure:
+          context: capstone_env_variables
+          requires: [build-production-app]
+          filters:
+            branches:
+              only: [ master ]
+      - query-infrastructure-outputs:
+          context: capstone_env_variables
+          requires:
+            - deploy-infrastructure
+      - configure-resources:
+          requires:
+            - query-infrastructure-outputs
+          context: capstone_env_variables
+          filters:
+            branches:
+              only: [ master ]
+      - deploy-source-code:
+          requires:
+            - query-infrastructure-outputs
+            - configure-resources
+          filters:
+            branches:
+              only: [ master ]
+          context: capstone_env_variables
+      - get-source-code-key:
+          requires:
+            - deploy-source-code
+          context: capstone_env_variables
+      - deploy-ml-resources:
+          requires:
+            - get-source-code-key
+          context: capstone_env_variables
+          filters:
+            branches:
+              only: [ master ]
+      - deploy-k8-app:
+          context: capstone_env_variables
+          requires: [deploy-ml-resources]
+          filters:
+            branches:
+              only: [ master ]
+# END WORKFLOWS ===========

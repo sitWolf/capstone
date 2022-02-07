@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{% block head_title %}{% endblock head_title %}{% endblock title %}
+{% load static %}
+{% block content %}
+
+<div class="container">
+      <div class="row">
+    <div class="col">
+      <div class="file-upload">
+        <h3 class="header-steps">Description:</h3>
+        <h5 class="header-steps">This web application provides a practical algorithm for face reconstruction. It is based on
+          <a style="text-decoration: none" href="https://github.com/TencentARC/GFPGAN" target="_blank">GFPGAN</a>. For more information see our <a style="text-decoration: none" href="{% url 'about' %}">FAQs</a> page.
+        </h5>
+
+      </div>
+    </div>
+      </div>
+
+  <form method="post" enctype=multipart/form-data>
+
+  <div class="row">
+    <div class="col">
+  <div class="file-upload disabled-function">
+    <h3 class="header-steps">Try:</h3>
+    <div style="margin-left: 15%;">
+
+                        <a><img class="test-thumbnail" id="try_1" src="{{ samples }}" alt="Albert Einstein"></a>
+
+</div>
+    </div>
+      <div class="file-upload">
+        <h3 class="header-steps">Step 1:</h3>
+        <button class="file-btn file-upload-btn" type="button" onclick="$('.file-upload-input').trigger('click')">Add Image</button>
+        <div class="image-upload-wrap">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <div class="drag-text">
+            <h3>Drag and drop an image <br>--or--<br> Select add image</h3>
+          </div>
+        </div>
+        <div class="file-upload-content">
+          <img class="file-upload-image" src="#" alt="your image" />
+          <div class="image-title-wrap">
+            <button type="button" onclick="removeUpload()" class="remove-image">
+              Remove <span class="image-title">Uploaded Image</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="row">
+    <div class="col">
+      <div class="file-upload">
+        <h3 class="header-steps">Step 2:</h3>
+        <button class="file-btn sharpen-btn" type="submit" value = "submit" onclick="afterSubmit();">
+          <span id="startReconstructionButton">
+            <span>Start reconstruction</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+  </form>
+  <div class="row">
+    <div class="col">
+      <div class="file-download" id="download-box">
+                      <h3 class="header-steps">Step 3:</h3>
+          {% if image %}
+          <a href="{{ image }}" download="filename">
+
+        <button class="file-btn file-download-btn" type="button">
+          Download
+                    </button>
+</a>
+            {% else %}
+                <button disabled class="file-btn file-download-btn" type="button">
+          NO OUTPUT
+                    </button>
+        {% endif %}
+
+        <div class="image-output-wrap ms-auto">
+          {% if image %}
+                      <img style="height: 100%; width:100%" src="{{ image }}" alt="Generated image" class="padded-center">
+            {% else %}
+        {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      {% endblock content %}

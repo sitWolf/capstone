@@ -1,0 +1,84 @@
+
+
+AWSTemplateFormatVersion: '2010-09-09'
+
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  serverless-image-reconstruction
+  SAM Template for serverless-image-reconstruction Lambda function for GFPGAN
+
+Parameters:
+#  SecurityGroupIds:
+#    Type: CommaDelimitedList
+#    Default: sg-0954e57a2a15bee3a
+#  SubnetIDs:
+#    Type: CommaDelimitedList
+#    Description: The list of SubnetIDs in your Virtual Private Cloud (VPC)
+#    Default: subnet-05f266e00a019717f,subnet-032244c407a1536e4,subnet-03c60e04e8dc41d5a
+  EFSpath:
+    Type: String
+    Default: /mnt/efs
+#  AccessPointARN:
+#    Type: String
+#    Description: Access point ARN
+#    Default: arn:aws:elasticfilesystem:us-east-1:<YOUR AWS ACCOUNT ID>:access-point/fsap-0f3485a8f4b32a316
+
+Resources:
+  ReconstructionFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: restoration_function/
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Timeout: 60
+      MemorySize: 256
+      VpcConfig:
+        SecurityGroupIds:
+          ImportValue: !Sub "${AWS::StackName}-DefaultSecurityGroup"
+        SubnetIds:
+          ImportValue: !Sub "${AWS::StackName}-SubnetIds"
+
+      FileSystemConfigs:
+      - Arn: !Sub "${AWS::StackName}-AccessPointARN"
+        LocalMountPath: !Ref EFSpath
+      Policies:
+      - Statement:
+        - Sid: AWSLambdaVPCAccessExecutionRole
+          Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
+          Resource: "*"
+        - Sid: AmazonElasticFileSystemClientFullAccess
+          Effect: Allow
+          Action:
+            - elasticfilesystem:ClientMount
+            - elasticfilesystem:ClientRootAccess
+            - elasticfilesystem:ClientWrite
+            - elasticfilesystem:DescribeMountTargets
+          Resource: "*"
+        - Sid: ResourceSpecificLambdaGetS3Access
+          Effect: Allow
+          Action:
+            - s3-object-lambda:*
+            - s3:Get
+          Resource: "arn:aws:s3:::reconstruction-private-bucket-input/*"
+        - Sid: ResourceSpecificLambdaPutS3Access
+          Effect: Allow
+          Action:
+            - s3-object-lambda:*
+            - s3:Put
+          Resource: "arn:aws:s3:::reconstruction-private-bucket-output/*"
+      Environment:
+        Variables:
+          PYTHONPATH: /efs
+          MODEL_FILE_NAME: /mnt/inference/model/bc-xgboost-model
+
+Outputs:
+  Reconstruction Function:
+    Description: "Reconstruction Lambda Function ARN"
+    Value: !GetAtt Reconstruction.Arn

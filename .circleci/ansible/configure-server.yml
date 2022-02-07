@@ -1,0 +1,13 @@
+---
+
+- name: "configuration play."
+  hosts: web
+  user: ec2-user
+  gather_facts: false
+  vars:
+    - ansible_python_interpreter: /usr/bin/python3
+    - ansible_host_key_checking: false
+    - ansible_stdout_callback: yaml
+    - CIRCLE_WORKFLOW_ID: "{{ lookup('env','CIRCLE_WORKFLOW_ID') }}"
+  roles:
+    - efs-ec2-mount
