@@ -512,7 +512,7 @@ workflows:
       - local-test:
           requires: [lint-dockerfiles]
       - build-production-app:
-          requires: [local-test]buc
+          requires: [local-test]
           context: restoration_env
       - deploy-infrastructure:
           context: capstone_env_variables
