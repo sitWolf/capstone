@@ -12,8 +12,8 @@ The steps provided here are for Linux. Check out the references to install on ot
 ### Install Kubectl (client)
 [Reference](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 ```
-curl -LO "https://dl.k8s.io/release/1.21.2/bin/linux/amd64/kubectl"
-curl -LO "https://dl.k8s.io/1.21.2/bin/linux/amd64/kubectl.sha256"
+curl -LO "https://dl.k8s.io/release/v1.21.2/bin/linux/amd64/kubectl"
+curl -LO "https://dl.k8s.io/v1.21.2/bin/linux/amd64/kubectl.sha256"
 echo "$(<kubectl.sha256)  kubectl" | sha256sum --check
 sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 kubectl version --client
