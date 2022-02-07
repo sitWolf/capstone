@@ -85,13 +85,17 @@ echo -e "\n"
 echo "If all successfull, update your DNS records."
 echo "Do this by creating a simple A record pointing to the loadbalancer IP (Network Load Balancer)"
 echo "If no NLB external IP is shown, rerun this file."
-echo "Confirm that DNS has been updated (may take several minutes). Continuing without updated DNS records will fail certificate generation."
-read -p "When finished press enter to continue..."
-read -p "Are you sure?[yN] " -n 1 -r
 
-if [[ $REPLY =~ ^[Yy]$ ]]
-then
-    envsubst < ./django-k8-deployment/configs/ingress-p2/traefik-controller-deployment.yaml | kubectl apply -f -
-else
-    exit 0
-fi
+# Certificate will not be generated with this method.
+envsubst < ./django-k8-deployment/configs/ingress-p2/traefik-controller-deployment.yaml | kubectl apply -f -
+
+#echo "Confirm that DNS has been updated (may take several minutes). Continuing without updated DNS records will fail certificate generation."
+
+#read -p "Are you sure?[yN] " -n 1 -r
+#
+#if [[ $REPLY =~ ^[Yy]$ ]]
+#then
+#    envsubst < ./django-k8-deployment/configs/ingress-p2/traefik-controller-deployment.yaml | kubectl apply -f -
+#else
+#    exit 0
+#fi
