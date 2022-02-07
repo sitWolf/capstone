@@ -492,42 +492,42 @@ workflows:
       - build-production-app:
           requires: [local-test]
           context: restoration_env
-      - deploy-infrastructure:
-          context: capstone_env_variables
-          requires: [build-production-app]
-          filters:
-            branches:
-              only: [ master ]
-      - query-infrastructure-outputs:
-          context: capstone_env_variables
-          requires:
-            - deploy-infrastructure
-      - configure-resources:
-          requires:
-            - query-infrastructure-outputs
-          context: capstone_env_variables
-          filters:
-            branches:
-              only: [ master ]
-      - deploy-source-code:
-          requires:
-            - query-infrastructure-outputs
-            - configure-resources
-          filters:
-            branches:
-              only: [ master ]
-          context: capstone_env_variables
-      - get-source-code-key:
-          requires:
-            - deploy-source-code
-          context: capstone_env_variables
-      - deploy-ml-resources:
-          requires:
-            - get-source-code-key
-          context: capstone_env_variables
-          filters:
-            branches:
-              only: [ master ]
+#      - deploy-infrastructure:
+#          context: capstone_env_variables
+#          requires: [build-production-app]
+#          filters:
+#            branches:
+#              only: [ master ]
+#      - query-infrastructure-outputs:
+#          context: capstone_env_variables
+#          requires:
+#            - deploy-infrastructure
+#      - configure-resources:
+#          requires:
+#            - query-infrastructure-outputs
+#          context: capstone_env_variables
+#          filters:
+#            branches:
+#              only: [ master ]
+#      - deploy-source-code:
+#          requires:
+#            - query-infrastructure-outputs
+#            - configure-resources
+#          filters:
+#            branches:
+#              only: [ master ]
+#          context: capstone_env_variables
+#      - get-source-code-key:
+#          requires:
+#            - deploy-source-code
+#          context: capstone_env_variables
+#      - deploy-ml-resources:
+#          requires:
+#            - get-source-code-key
+#          context: capstone_env_variables
+#          filters:
+#            branches:
+#              only: [ master ]
 #      - deploy-k8-app:
 #          context: capstone_env_variables
 #          requires: [deploy-ml-resources]
