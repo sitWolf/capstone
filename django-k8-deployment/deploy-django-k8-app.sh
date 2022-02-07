@@ -26,6 +26,8 @@ envsubst < ./django-k8-deployment/configs/namespaces/capstone.yaml | kubectl app
 
 echo -e "\n=CONFIGMAPS ====="
 # Create the configmaps for django and postgres
+envsubst < ./django-k8-deployment/configs/configmaps/django-config.yaml | kubectl apply --dry-run=client -f -
+
 envsubst < ./django-k8-deployment/configs/configmaps/django-config.yaml | kubectl apply -f -
 envsubst < ./django-k8-deployment/configs/configmaps/postgres-config.yaml | kubectl apply -f -
 
@@ -33,7 +35,7 @@ envsubst < ./django-k8-deployment/configs/configmaps/postgres-config.yaml | kube
 # STEP 1: Include domain name in the yaml snippet
 echo "Variables used:"
 echo "domain: $DOMAIN"
-echo "www domain: www.$DOMAIN"
+echo "www domain: $WWWDOMAIN"
 echo "email: $DOMAIN_EMAIL"
 sed -e "s/\${domain}/$DOMAIN/" -e "s/\${domain_email}/$DOMAIN_EMAIL/"  -e "s/\${wwwdomain}/$WWWDOMAIN/" ./django-k8-deployment/configs/.envs/.configmaps/.traefik >> ./django-k8-deployment/configs/traefik/traefik.yml
 # STEP 2: Create the configmap
