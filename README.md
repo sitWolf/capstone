@@ -88,20 +88,26 @@ After creating the context click on `Add Environment Variable`, and create a new
 
 Also add the following variables
 ```
-KEYNAME
-FINGERPRINT
-AMI_TO_USE
-AWS_ACCESS_KEY_ID
-AWS_DEFAULT_REGION
-AWS_SECRET_ACCESS_KEY
-S3_BUCKET_IN_NAME
-S3_BUCKET_OUT_NAME
-S3_BUCKET_SOURCE_NAME
-STACK_NAME_INFRASTRUCTURE
-STACK_NAME_SERVERLESS
-EKS_CLUSTER_NAME
-POSTGRES_PASSWORD
-DJANGO_SECRET_KEY
+AMI_TO_USE			            ****431e	
+AWS_ACCESS_KEY_ID		        ****44XE	
+AWS_DEFAULT_REGION		        ****st-2	
+AWS_SECRET_ACCESS_KEY		    ****YXD9	
+DJANGO_ADMIN_URL		        ****sZp/	
+DJANGO_AWS_ACCESS_KEY_ID	    ****44XE	
+DJANGO_AWS_SECRET_ACCESS_KEY	****YXD9	
+DJANGO_SECRET_KEY		        ****ldhW	
+DOMAIN				            ****.com	
+DOMAIN_EMAIL			        ****.com	
+EKS_CLUSTER_NAME		        ****tone	
+KEYNAME				            ****inja	
+NAMESPACE			            ****tone	
+POSTGRES_PASSWORD		        ****PbB5	
+S3_BUCKET_IN_NAME		        ****nput	
+S3_BUCKET_OUT_NAME		        ****tput	
+S3_BUCKET_SOURCE_NAME		    ****urce	
+STACK_NAME_INFRASTRUCTURE	    ****ture	
+STACK_NAME_SERVERLESS		    ****mbda	
+WWWDOMAIN			            ****.com
 ```
 ---
 

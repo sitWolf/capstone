@@ -20,6 +20,7 @@ commands:
             sudo rm /bin/sh && \
             sudo ln -s /bin/bash /bin/sh && \
             ls -al /bin/sh
+
   configure_kubectl:
     steps:
       # Install kubectl
@@ -44,6 +45,7 @@ commands:
             echo $AWS_DEFAULT_REGION
             echo $EKS_CLUSTER_NAME
             aws eks --region ${AWS_DEFAULT_REGION} update-kubeconfig --name ${EKS_CLUSTER_NAME}
+
   destroy-infrastructure:
     description: Destroy cloudformation stacks given a workflow ID.
     steps:
@@ -66,6 +68,7 @@ commands:
             aws s3 rm s3://${S3_BUCKET_OUT_NAME}-${CIRCLE_WORKFLOW_ID} --recursive
             aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name "${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}"
           when: on_fail
+
   destroy-serverless-resources:
     description: Destroy cloudformation of the serverless resources stack.
     steps:
@@ -87,6 +90,7 @@ commands:
             aws s3 rm s3://${S3_BUCKET_IN_NAME}-${CIRCLE_WORKFLOW_ID} --recursive
             aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name ${STACK_NAME_SERVERLESS}
           when: on_fail
+
   configure_alpine_image_w_aws:
     steps:
       - run:
@@ -492,7 +496,6 @@ jobs:
             - destroy-environment
             - revert-migrations
             - notify
-
 
   destroy-all-resources:
     docker:
