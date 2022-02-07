@@ -528,10 +528,10 @@ workflows:
           filters:
             branches:
               only: [ master ]
-      - deploy-k8-app:
-          context: capstone_env_variables
-          requires: [deploy-ml-resources]
-          filters:
-            branches:
-              only: [ master ]
+#      - deploy-k8-app:
+#          context: capstone_env_variables
+#          requires: [deploy-ml-resources]
+#          filters:
+#            branches:
+#              only: [ master ]
 # END WORKFLOWS ===========

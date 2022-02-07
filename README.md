@@ -8,13 +8,25 @@ Users can upload a picture they wish to reconstruct. After users upload their pi
 
 ---
 
+> **_INFO:_**  Make sure to install Git LFS before cloning this repository. Failing to do so will lead to errors due to missing files. Refer to the requirements section for more information regarding Git LFS.
+
+## Repository content
+The `.circleci` directory holds the CircleCI configuration file that define the pipeline configuration. 
+The `django-k8-app` directory holds the configuration files for deployment of the Django application with Kubernetes.
+The `django-k8-deployment` directory holds the Django app source files that can be used to generate Docker file.
+The `eks-cluster` directory holds instructions for deploying a Kubernetes cluster on AWS EKS.
+The `face-restoration-ml` directory holds the code used for deployment of GFPGAN with AWS Lambda using EC2 Mounted EFS. 
+The `.gitattributes` defines the (large) model files that are pushed and pulled using Git LFS. 
+
+> **_INFO:_**  When running for the first time it is recommended to comment out the deployment jobs because a cluster must be created first. The cluster is created manually due to configurations files that are modified manually.
+
+---
+
 Project keywords: [`Kubernetes`](https://kubernetes.io/) [`CircleCI`](https://circleci.com) [`Docker`](https://www.docker.com/) [`Docker Compose`](https://docs.docker.com/compose/) [`Makefile`](https://www.gnu.org) [`AWS Infrastructure as Code`](https://aws.amazon.com) [`Django`](https://www.djangoproject.com/) [`Django Cookiecutter`](https://cookiecutter-django.readthedocs.io) [`GitHub`](https://github.com/) [`Slack`](https://slack.com) [`Prometheus`](https://prometheus.io/)
 
 Tags: [`GFPGAN`](https://github.com/TencentARC/GFPGAN.git) `AWS Machine Learning` `AWS Lambda` `AWS EFS mount EC2` `Pipeline` `DevOps`
 
 > **_WARNING:_**  Carefully review costs for all resources used before deploying. Moreover, always avoid unexpected cost by destroying all resources when finished. This project contains AWS resources with costs that are not cheap! Furthermore, the author is not responsible for the use of the information contained in or linked from this repository.
-
-> **_INFO:_**  Make sure to install Git LFS before cloning this repository. Failing to do so will lead to errors due to missing files. Refer to the requirements section for more information regarding Git LFS.
 
 This project operationalizes a Machine Learning Microservice API. In general, it comprises three applications:
   1. A Django [web application](https://github.com/sitWolf/capstone/tree/main/face_reconstruction_web_app) that allows users to submit a picture whom these wish to reconstruct.
@@ -61,6 +73,11 @@ sudo chmod +x /bin/hadolint
 ---
 
 ## Preparation
+
+### Database
+Create a database (e.g., an AWS RDS Postgres database). Include the credentials in the 
+
+### Variables
 Create an EC2 Key Pair. Write down the key-pair name. You will need it later when setting up environment variables (under KEYNAME).
 Copy the contents of the .pem file and use it to create an SSH key is CircleCI.
 To add an SSH key navigate to `Project Settings` > `SSH Keys`. Under Additional SSH keys, click on `Add SSH` key and paste the content of the .pem file in it.
@@ -84,6 +101,8 @@ S3_BUCKET_SOURCE_NAME
 STACK_NAME_INFRASTRUCTURE
 STACK_NAME_SERVERLESS
 EKS_CLUSTER_NAME
+POSTGRES_PASSWORD
+DJANGO_SECRET_KEY
 ```
 ---
 

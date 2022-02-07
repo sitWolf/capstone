@@ -145,6 +145,7 @@ Apply the file.
 ```
 kubectl apply -f v2_3_1_full.yaml
 ```
+
 ### Verify the controller is properly installed
 ```
 kubectl get deployment/aws-load-balancer-controller -n kube-system
