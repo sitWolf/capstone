@@ -6,8 +6,6 @@ FROM python:${PYTHON_VERSION} as python
 # Python build stage
 FROM python as python-build-stage
 
-TEST
-
 ARG BUILD_ENVIRONMENT=local
 
 # Install apt packages
