@@ -64,7 +64,7 @@ commands:
             # Empty the buckets
             aws s3 rm s3://${S3_BUCKET_SOURCE_NAME} --recursive
             aws s3 rm s3://${S3_BUCKET_OUT_NAME} --recursive
-            aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name ${STACK_NAME_INFRASTRUCTURE}
+            aws cloudformation delete-stack --region ${AWS_DEFAULT_REGION} --stack-name "${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}"
           when: on_fail
   destroy-serverless-resources:
     description: Destroy cloudformation of the serverless resources stack.
@@ -189,7 +189,7 @@ jobs:
             set TERM=xterm
             aws cloudformation create-stack \
             --region ${AWS_DEFAULT_REGION} \
-            --stack-name ${STACK_NAME_INFRASTRUCTURE} \
+            --stack-name "${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}" \
             --template-body file://face-restoration-ml/aws_iac/create__infrastructure.yml \
             --parameters \
             ParameterKey=KeyName,ParameterValue=${KEYNAME} \
@@ -219,14 +219,14 @@ jobs:
 #          name: Check model sha1
 #          command: |
 #            sha1sum ~/project/face-restoration-ml/app/pretrained_models/cpu.pth
-      - run: aws cloudformation wait stack-create-complete --region ${AWS_DEFAULT_REGION} --stack-name ${STACK_NAME_INFRASTRUCTURE}
+      - run: aws cloudformation wait stack-create-complete --region ${AWS_DEFAULT_REGION} --stack-name "${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}"
       - run:
           name: Get Access Point ARN
           command: |
             echo "export ACCESSPOINTARN=$( \
             aws cloudformation describe-stacks \
             --region eu-west-2 \
-            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='AccessPointARN'].OutputValue" \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}'][].Outputs[?OutputKey=='AccessPointARN'].OutputValue" \
             --output text)" >> ~/project/.circleci/ansible/env_vars
       - run:
           name: Get Security Group IDs
@@ -234,7 +234,7 @@ jobs:
             echo "export SECURITYGROUPIDS=$( \
             aws cloudformation describe-stacks \
             --region eu-west-2 \
-            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='DefaultSecurityGroup'].OutputValue" \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}'][].Outputs[?OutputKey=='DefaultSecurityGroup'].OutputValue" \
             --output text)" >> ~/project/.circleci/ansible/env_vars
       - run:
           name: Get Subnet IDs
@@ -242,7 +242,7 @@ jobs:
             echo "export SUBNETIDS=$( \
             aws cloudformation describe-stacks \
             --region eu-west-2 \
-            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='SubnetIds'].OutputValue" \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}'][].Outputs[?OutputKey=='SubnetIds'].OutputValue" \
             --output text)" >> ~/project/.circleci/ansible/env_vars
       - run:
           name: Get EFS Accesspoint ID
@@ -250,7 +250,7 @@ jobs:
               echo "export EFSACCESSPOINTID=$( \
               aws cloudformation describe-stacks \
               --region eu-west-2 \
-              --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='AccessPointID'].OutputValue" \
+              --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}'][].Outputs[?OutputKey=='AccessPointID'].OutputValue" \
               --output text)" >> ~/project/.circleci/ansible/env_vars
       - run:
           name: Get EFS File System ID
@@ -258,7 +258,7 @@ jobs:
               echo "export EFSFILESYSTEMID=$( \
               aws cloudformation describe-stacks \
               --region eu-west-2 \
-              --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='FileSystemID'].OutputValue" \
+              --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}'][].Outputs[?OutputKey=='FileSystemID'].OutputValue" \
               --output text)" >> ~/project/.circleci/ansible/env_vars
       - run:
           name: Get EC2 Public DNS name
@@ -266,7 +266,7 @@ jobs:
             echo "$( \
             aws cloudformation describe-stacks \
             --region eu-west-2 \
-            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}'][].Outputs[?OutputKey=='EC2IP'].OutputValue" \
+            --query "Stacks[?StackName=='${STACK_NAME_INFRASTRUCTURE}-${CIRCLE_WORKFLOW_ID}'][].Outputs[?OutputKey=='EC2IP'].OutputValue" \
             --output text)" >> ~/project/.circleci/ansible/inventory.ini
       - run: cat ~/project/.circleci/ansible/inventory.ini
       - run: cat ~/project/.circleci/ansible/env_vars
@@ -430,7 +430,7 @@ jobs:
               else
                 aws cloudformation create-stack \
                 --region ${AWS_DEFAULT_REGION} \
-                --stack-name ${STACK_NAME_SERVERLESS} \
+                --stack-name "${STACK_NAME_SERVERLESS}-${CIRCLE_WORKFLOW_ID}" \
                 --template-body file://face-restoration-ml/aws_iac/create__lambda.yml \
                 --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
                 --parameters \
@@ -528,10 +528,10 @@ workflows:
           filters:
             branches:
               only: [ master ]
-#      - deploy-k8-app:
-#          context: capstone_env_variables
-#          requires: [deploy-ml-resources]
-#          filters:
-#            branches:
-#              only: [ master ]
+      - deploy-k8-app:
+          context: capstone_env_variables
+          requires: [deploy-ml-resources]
+          filters:
+            branches:
+              only: [ master ]
 # END WORKFLOWS ===========

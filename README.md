@@ -4,7 +4,7 @@
 This repository provides code for deployment of an image face reconstruction application web application. It showcases the development of a cloudnative application build in a DevOps Its deployment is configured by means of a CirclCi pipeline. The instructions for deployments can be found here. This repository contains code as part of the [Udacity Cloud DevOps Engineer Nanodegree Program](https://www.udacity.com/courses/all) capstone project.
 
 ## Application description
-Users can upload a picture they wish to reconstruct. After users upload their picture they are prompted to wait by a loading screen. In the backend, the file is renamed to a random name (randomly generated hex string) and is uploaded to an S3 bucket. The upload to the S3 bucket triggers an AWS Lambda function. The picture then runs through an inference model that attempts to properly reconstruct faces on the image (e.g. sharpen contours). The reconstructed picture is returned to the user. All user-related content are automatically destroyed from the servers after 15 min. This is achieved by another AWS Lambda function. The deployment of the code and resources needed are described in the next sections.
+Users can upload a picture they wish to reconstruct. After users upload their picture they are prompted to wait by a loading screen. In the backend, the file is renamed to a random name (randomly generated hex string) and is uploaded to an S3 bucket. The upload to the S3 bucket triggers an AWS Lambda function. The picture then runs through an inference model that attempts to properly reconstruct faces on the image (e.g. sharpen contours). The reconstructed picture is returned to the user. The deployment of the code and resources needed are described in the next sections.
 
 ---
 
@@ -19,8 +19,6 @@ The `face-restoration-ml` directory holds the code used for deployment of GFPGAN
 The `.gitattributes` defines the (large) model files that are pushed and pulled using Git LFS. 
 
 > **_INFO:_**  When running for the first time it is recommended to comment out the deployment jobs because a cluster must be created first. The cluster is created manually due to configurations files that are modified manually.
-
----
 
 Project keywords: [`Kubernetes`](https://kubernetes.io/) [`CircleCI`](https://circleci.com) [`Docker`](https://www.docker.com/) [`Docker Compose`](https://docs.docker.com/compose/) [`Makefile`](https://www.gnu.org) [`AWS Infrastructure as Code`](https://aws.amazon.com) [`Django`](https://www.djangoproject.com/) [`Django Cookiecutter`](https://cookiecutter-django.readthedocs.io) [`GitHub`](https://github.com/) [`Slack`](https://slack.com) [`Prometheus`](https://prometheus.io/)
 
@@ -75,7 +73,8 @@ sudo chmod +x /bin/hadolint
 ## Preparation
 
 ### Database
-Create a database (e.g., an AWS RDS Postgres database). Include the credentials in the 
+* Create a database (e.g., an AWS RDS Postgres database).
+* Create a Kubernetes cluster. This repository provides instructions for deploying an AWS EKS cluster. For the instructions, refer to section [Repository content](https://github.com/sitWolf/capstone#repository-content). The workflow contained here assumes that the user that created the cluster is the same user that wished to connect to the cluster. When this is not the case, AWS will raise errors.
 
 ### Variables
 Create an EC2 Key Pair. Write down the key-pair name. You will need it later when setting up environment variables (under KEYNAME).
@@ -149,3 +148,4 @@ kubectl get secret -o yaml
 * Automatic certificate generation (Traefik), fails due to Kubernetes read-only file system. A thread was opened for this [issue](https://stackoverflow.com/questions/70948605/working-with-kubernetes-read-only-file-system).
 * When the above is resolved, integrate `deploy-django-k8-ingress.sh` in the script. Or modify certificate management to use user-provided certificate rather than using Traefik auto generated certificates.
 * Set up the `livenessProbe` and `readinessProbe` for the Django Kubernetes deployment (commented out).
+* Add a lambda function that destroys user uploaded content after x minutes.
