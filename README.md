@@ -3,7 +3,7 @@
 # Capstone Project
 
 ## Project Overview
-This repository provides code for deployment of an image face reconstruction application web application. It showcases the development of a cloudnative application build in a DevOps Its deployment is configured by means of a CirclCi pipeline. The instructions for deployments can be found here. This repository contains code as part of the [Udacity Cloud DevOps Engineer Nanodegree Program](https://www.udacity.com/courses/all) capstone project.
+This repository provides code for deployment of an image face reconstruction web application. It showcases the development of a cloud native application build in a DevOps environment. Its deployment is configured by means of a CirclCi pipeline. This repository contains code as part of the [Udacity Cloud DevOps Engineer Nanodegree Program](https://www.udacity.com/courses/all) capstone project.
 
 ## Application description
 Users can upload a picture they wish to reconstruct. After users upload their picture they are prompted to wait by a loading screen. In the backend, the file is renamed to a random name (randomly generated hex string) and is uploaded to an S3 bucket. The upload to the S3 bucket triggers an AWS Lambda function. The picture then runs through an inference model that attempts to properly reconstruct faces on the image (e.g. sharpen contours). The reconstructed picture is returned to the user. The deployment of the code and resources needed are described in the next sections.
@@ -12,13 +12,11 @@ Users can upload a picture they wish to reconstruct. After users upload their pi
 
 ## Repository content
 The `.circleci` directory holds the CircleCI configuration file that define the pipeline configuration. 
-The `django-k8-app` directory holds the configuration files for deployment of the Django application with Kubernetes.
-The `django-k8-deployment` directory holds the Django app source files that can be used to generate Docker file.
+The `django-k8-app` directory holds the Django app source files that can be used to generate Docker file.
+The `django-k8-deployment` directory holds the configuration files for deployment of the Django application with Kubernetes.
 The `eks-cluster` directory holds instructions for deploying a Kubernetes cluster on AWS EKS.
 The `face-restoration-ml` directory holds the code used for deployment of GFPGAN with AWS Lambda using EC2 Mounted EFS. 
-The `.gitattributes` defines the (large) model files that are pushed and pulled using Git LFS. 
-
-> **_INFO:_**  When running for the first time it is recommended to comment out the deployment jobs because a cluster must be created first. The cluster is created manually due to configurations files that are modified manually.
+The `.gitattributes` defines the (large) model files that are pushed and pulled using Git LFS.
 
 Project keywords: [`Kubernetes`](https://kubernetes.io/) [`CircleCI`](https://circleci.com) [`Docker`](https://www.docker.com/) [`Docker Compose`](https://docs.docker.com/compose/) [`Makefile`](https://www.gnu.org) [`AWS Infrastructure as Code`](https://aws.amazon.com) [`Django`](https://www.djangoproject.com/) [`Django Cookiecutter`](https://cookiecutter-django.readthedocs.io) [`GitHub`](https://github.com/) [`Slack`](https://slack.com) [`Prometheus`](https://prometheus.io/)
 
@@ -26,7 +24,7 @@ Tags: [`GFPGAN`](https://github.com/TencentARC/GFPGAN.git) `AWS Machine Learning
 
 > **_WARNING:_**  Carefully review costs for all resources used before deploying. Moreover, always avoid unexpected cost by destroying all resources when finished. This project contains AWS resources with costs that are not cheap! Furthermore, the author is not responsible for the use of the information contained in or linked from this repository.
 
-This project operationalizes a Machine Learning Microservice API. In general, it comprises three applications:
+This project operationalizes a Deep Learning Microservice API. In general, it comprises three applications:
   1. A Django [web application](https://github.com/sitWolf/capstone/tree/main/face_reconstruction_web_app) that allows users to submit a picture whom these wish to reconstruct.
   2. An inference application that processes the submitted images
   3. A Lambda function that operationalizes the inference application
@@ -88,26 +86,26 @@ After creating the context click on `Add Environment Variable`, and create a new
 
 Also add the following variables
 ```
-AMI_TO_USE			            ****431e	
+AMI_TO_USE			        ****431e	
 AWS_ACCESS_KEY_ID		        ****44XE	
 AWS_DEFAULT_REGION		        ****st-2	
-AWS_SECRET_ACCESS_KEY		    ****YXD9	
+AWS_SECRET_ACCESS_KEY		        ****YXD9	
 DJANGO_ADMIN_URL		        ****sZp/	
-DJANGO_AWS_ACCESS_KEY_ID	    ****44XE	
+DJANGO_AWS_ACCESS_KEY_ID	        ****44XE	
 DJANGO_AWS_SECRET_ACCESS_KEY	****YXD9	
 DJANGO_SECRET_KEY		        ****ldhW	
-DOMAIN				            ****.com	
+DOMAIN				        ****.com	
 DOMAIN_EMAIL			        ****.com	
 EKS_CLUSTER_NAME		        ****tone	
-KEYNAME				            ****inja	
-NAMESPACE			            ****tone	
+KEYNAME				        ****inja	
+NAMESPACE			        ****tone	
 POSTGRES_PASSWORD		        ****PbB5	
 S3_BUCKET_IN_NAME		        ****nput	
 S3_BUCKET_OUT_NAME		        ****tput	
-S3_BUCKET_SOURCE_NAME		    ****urce	
-STACK_NAME_INFRASTRUCTURE	    ****ture	
-STACK_NAME_SERVERLESS		    ****mbda	
-WWWDOMAIN			            ****.com
+S3_BUCKET_SOURCE_NAME		        ****urce	
+STACK_NAME_INFRASTRUCTURE	        ****ture	
+STACK_NAME_SERVERLESS		        ****mbda	
+WWWDOMAIN			        ****.com
 ```
 ---
 
