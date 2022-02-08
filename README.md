@@ -92,7 +92,7 @@ AWS_DEFAULT_REGION		        ****st-2
 AWS_SECRET_ACCESS_KEY		        ****YXD9	
 DJANGO_ADMIN_URL		        ****sZp/	
 DJANGO_AWS_ACCESS_KEY_ID	        ****44XE	
-DJANGO_AWS_SECRET_ACCESS_KEY	****YXD9	
+DJANGO_AWS_SECRET_ACCESS_KEY	        ****YXD9	
 DJANGO_SECRET_KEY		        ****ldhW	
 DOMAIN				        ****.com	
 DOMAIN_EMAIL			        ****.com	
