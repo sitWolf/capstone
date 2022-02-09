@@ -16,7 +16,7 @@ The `eks-cluster` directory holds instructions for deploying a Kubernetes cluste
 The `face-restoration-ml` directory holds the code used for deployment of GFPGAN with AWS Lambda using EC2 Mounted EFS. 
 The `.gitattributes` defines the (large) model files that are pushed and pulled using Git LFS.
 
-Project keywords: [`Kubernetes`](https://kubernetes.io/) [`CircleCI`](https://circleci.com) [`Docker`](https://www.docker.com/) [`Docker Compose`](https://docs.docker.com/compose/) [`Makefile`](https://www.gnu.org) [`AWS Infrastructure as Code`](https://aws.amazon.com) [`Django`](https://www.djangoproject.com/) [`Django Cookiecutter`](https://cookiecutter-django.readthedocs.io) [`GitHub`](https://github.com/) [`Slack`](https://slack.com) [`Prometheus`](https://prometheus.io/)
+Project keywords: [`Kubernetes`](https://kubernetes.io/) [`CircleCI`](https://circleci.com) [`Docker`](https://www.docker.com/) [`Docker Compose`](https://docs.docker.com/compose/) [`Makefile`](https://www.gnu.org) [`AWS Infrastructure as Code`](https://aws.amazon.com) [`Django`](https://www.djangoproject.com/) [`Django Cookiecutter`](https://cookiecutter-django.readthedocs.io) [`GitHub`](https://github.com/) [`Slack`](https://slack.com) [`Ansible`](https://docs.ansible.com/)
 
 Tags: [`GFPGAN`](https://github.com/TencentARC/GFPGAN.git) `AWS Machine Learning` `AWS Lambda` `AWS EFS mount EC2` `Pipeline` `DevOps`
 
