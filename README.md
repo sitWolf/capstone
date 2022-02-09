@@ -1,4 +1,4 @@
-# Capstone Project
+# A Kubernetes-Django-AWS-based-microservice web application
 
 ## Project Overview
 This repository provides code for deployment of an image face reconstruction web application. It showcases the development of a cloud native application build in a DevOps environment. Its deployment is configured by means of a CirclCi pipeline. This repository contains code as part of the [Udacity Cloud DevOps Engineer Nanodegree Program](https://www.udacity.com/courses/all) capstone project.
