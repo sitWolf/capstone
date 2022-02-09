@@ -151,3 +151,4 @@ kubectl get secret -o yaml
 * When the above is resolved, integrate `deploy-django-k8-ingress.sh` in the script. Or modify certificate management to use user-provided certificate rather than using Traefik auto generated certificates.
 * Set up the `livenessProbe` and `readinessProbe` for the Django Kubernetes deployment (commented out).
 * Add a lambda function that destroys user uploaded content after x minutes.
+* Define least privilege policies for this project (AWS IAM).
