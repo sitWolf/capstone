@@ -23,7 +23,7 @@ Tags: [`GFPGAN`](https://github.com/TencentARC/GFPGAN.git) `AWS Machine Learning
 > **_WARNING:_**  Carefully review costs for all resources used before deploying. Moreover, always avoid unexpected cost by destroying all resources when finished. This project contains AWS resources with costs that are not cheap! Furthermore, the author is not responsible for the use of the information contained in or linked from this repository.
 
 This project operationalizes a Deep Learning Microservice API. In general, it comprises three applications:
-  1. A Django [web application](https://github.com/sitWolf/capstone/tree/main/face_reconstruction_web_app) that allows users to submit a picture whom these wish to reconstruct.
+  1. A Django [web application](https://github.com/sitWolf/a_face_reconstruction_web_app) that allows users to submit a picture whom these wish to reconstruct.
   2. An inference application that processes the submitted images
   3. A Lambda function that operationalizes the inference application
 
@@ -34,7 +34,7 @@ The web application is build using Django and [Django Cookiecutter](https://gith
 [`GFPGAN`](https://github.com/TencentARC/GFPGAN) is used for the face reconstruction model. Some modifications have been made to read and write from and to AWS S3 (i.e. in memory processing), and other unused features are removed. AWS EFS with Lambda is used. The EFS file system is configured for a Lambda function to import the required libraries and load the model. The AWS [Pay as you go machine learning inference with AWS Lambda](https://aws.amazon.com/blogs/compute/pay-as-you-go-machine-learning-inference-with-aws-lambda/) was used as a guidance for mounting the file system (EFS) on EC2 instance.
 
 ### 3. A Lambda function(s)
-An Amazon Elastic File System (EFS)is mounted on an EC2 for use with a Lambda function. EFS provides a cost effective tool for using Lambda with heavy packages that require storage space to load models and other dependencies.
+An Amazon Elastic File System (EFS) is mounted on an EC2 for use with a Lambda function. EFS provides a cost effective tool for using Lambda with heavy packages that require storage space to load models and other dependencies.
 
 ---
 
